@@ -1,8 +1,11 @@
 # plant-web-scraper
 A nifty project for Veya that informed me about the lxml python library
 
-To run:
-`git clone https://github.com/EricChristensen/plant-web-scraper.git`
+To run, first clone the repo:
+
+`got clone https://github.com/EricChristensen/plant-web-scraper.git`
+
+Then run the python script:
 
 `python plant_site_parser.py`
 
