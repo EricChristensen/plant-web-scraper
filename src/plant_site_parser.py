@@ -9,13 +9,22 @@ class PlantForSale:
         self.sale_price = sale_price
         self.stock_status = stock_status
 
-def extract_plants_from_html(tree_elem):
+def get_li_elements():
+    headers = {'User-Agent': 'My User Agent 1.0'}
+    response = requests.get("https://www.nsetropicals.com/product-category/restocks/", headers=headers)
+    tree = lxml.html.fromstring(response.text)
+    return tree.xpath('//li')
+
+def extract_plants_from_html(li_elements):
     plants = []
-    for elem in tree_elem:
+    for li_element in li_elements:
         plant = PlantForSale("uninitialized", 0, -1, "")
 
         # I would think this wouldn't be necessary...But it works and just getting the fields from elem.xpath() does not work as intended...
-        li_html = lxml.html.tostring(elem)
+        # The odd behavior that is causing a problem: elem and li_tree are both trees of list elements
+        # when doing xpath on elem for h2 it gives every h2 for all of the list elements but getting the h2
+        # from the li_tree variables behaves as expected and just gives the h2 for that li...
+        li_html = lxml.html.tostring(li_element)
         li_tree = lxml.html.fromstring(li_html)
 
         h2_content = li_tree.xpath('//h2')
@@ -60,6 +69,12 @@ def extract_plants_from_file():
     previous_plants_file.close()
     return previous_plants
 
+def plant_list_to_dict(plant_list):
+    plants_dict = {}
+    for plant in plant_list:
+        plants_dict[plant.name] = plant
+    return plants_dict
+
 def output_to_console(plants_dict, previous_plants_dict):
     for plant in plants_dict:
         print(plants_dict[plant].name, plants_dict[plant].original_price, plants_dict[plant].stock_status)
@@ -79,21 +94,12 @@ def write_to_file(plants):
     f.close()
 
 if __name__ == "__main__":
-    headers = {'User-Agent': 'My User Agent 1.0'}
-    response = requests.get("https://www.nsetropicals.com/product-category/restocks/", headers=headers)
-    tree = lxml.html.fromstring(response.text)
-    tree_elem = tree.xpath('//li')
-
-    plants = extract_plants_from_html(tree_elem)
+    li_elements = get_li_elements()
+    plants = extract_plants_from_html(li_elements)
     previous_plants = extract_plants_from_file()
 
-    plants_dict = {}
-    for plant in plants:
-        plants_dict[plant.name] = plant
-
-    previous_plants_dict = {}
-    for plant in previous_plants:
-        previous_plants_dict[plant.name] = plant
+    plants_dict = plant_list_to_dict(plants)
+    previous_plants_dict = plant_list_to_dict(previous_plants)
 
     output_to_console(plants_dict, previous_plants_dict)
     write_to_file(plants)
